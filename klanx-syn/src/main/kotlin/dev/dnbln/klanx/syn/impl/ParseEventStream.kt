@@ -3,47 +3,50 @@ package dev.dnbln.klanx.syn.impl
 internal interface ParseEventStream {
     fun init()
 
-    fun begin(): ParseMarker
-    fun complete(marker: ParseMarker): CompletedParseMarker
-    fun abandon(marker: ParseMarker)
-    fun precede(marker: ParseMarker): ParseMarker
-    fun undoCompletion(marker: CompletedParseMarker): ParseMarker
+    fun begin(): PtNode
+    fun complete(marker: PtNode, nodeKind: NodeKind)
+    fun abandon(marker: PtNode)
+    fun precede(marker: PtNode): PtNode
 
     fun finish()
 
     companion object {
-        fun createStream(): ParseEventStream = ParseEventStreamImpl()
+        operator fun invoke(): ParseEventStream = ParseEventStreamImpl()
     }
 }
+
+data class ParseMarker(val index: Int)
 
 sealed class ParseEvent {
+    object Begin : ParseEvent()
+    class Token(token: dev.dnbln.klanx.syn.api.Token) : ParseEvent()
+    class End(nodeKind: NodeKind) : ParseEvent()
 
+    object Ghost: ParseEvent()
 }
 
-internal class ParseEventStreamImpl: ParseEventStream {
+internal class ParseEventStreamImpl : ParseEventStream {
     val stream = mutableListOf<ParseEvent>()
 
-    override fun init() {
+    override fun init() {}
+
+    override fun begin(): PtNode {
+
+    }
+
+    override fun complete(marker: PtNode, nodeKind: NodeKind): CompletedParseMarker {
         TODO("Not yet implemented")
     }
 
-    override fun begin(): ParseMarker {
+    override fun abandon(marker: PtNode) {
         TODO("Not yet implemented")
     }
 
-    override fun complete(marker: ParseMarker): CompletedParseMarker {
+    override fun precede(marker: PtNode): PtNode {
         TODO("Not yet implemented")
     }
 
-    override fun abandon(marker: ParseMarker) {
-        TODO("Not yet implemented")
-    }
-
-    override fun precede(marker: ParseMarker): ParseMarker {
-        TODO("Not yet implemented")
-    }
-
-    override fun undoCompletion(marker: CompletedParseMarker): ParseMarker {
+    override fun undoCompletion(marker: CompletedParseMarker): PtNode {
         TODO("Not yet implemented")
     }
 

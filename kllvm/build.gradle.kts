@@ -22,7 +22,7 @@ repositories {
 
 dependencies {
     implementation("org.bytedeco:llvm-platform:15.0.2-1.5.8-SNAPSHOT")
-    api("org.bytedeco:javacpp:1.5.8-SNAPSHOT")
+    implementation("org.bytedeco:javacpp:1.5.8-SNAPSHOT")
 
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.9.0")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.9.0")

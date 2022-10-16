@@ -1,5 +1,6 @@
 package dev.dnbln.kllvm
 
+import org.bytedeco.javacpp.Pointer
 import org.bytedeco.llvm.LLVM.LLVMBasicBlockRef
 import org.bytedeco.llvm.global.LLVM.*
 import kotlin.properties.PropertyDelegateProvider
@@ -28,4 +29,4 @@ class KLLVMBasicBlockRefDelegate(private val blockRef: KLLVMBasicBlockRef) :
 class KLLVMBasicBlockRef internal constructor(
     internal val ref: LLVMBasicBlockRef,
     @HoldRef private val ctxRef: KLLVMContext? = null
-)
+): Pointer(ref)

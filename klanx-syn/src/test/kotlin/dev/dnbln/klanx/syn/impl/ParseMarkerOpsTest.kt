@@ -6,12 +6,12 @@ import org.junit.jupiter.api.Test
 
 class ParseMarkerOpsTest {
     private fun assertRelations(
-        marker: ParseMarker,
-        prevSibling: ParseMarker? = null,
-        nextSibling: ParseMarker? = null,
-        parent: ParseMarker? = null,
-        firstChild: ParseMarker? = null,
-        lastChild: ParseMarker? = null
+        marker: PtNode,
+        prevSibling: PtNode? = null,
+        nextSibling: PtNode? = null,
+        parent: PtNode? = null,
+        firstChild: PtNode? = null,
+        lastChild: PtNode? = null
     ) {
         assertSame(marker.prevSibling, prevSibling)
         assertSame(marker.nextSibling, nextSibling)
@@ -22,10 +22,10 @@ class ParseMarkerOpsTest {
 
     @Test
     fun leavesWork() {
-        lateinit var child1: ParseMarker
-        lateinit var child2: ParseMarker
-        lateinit var child3: ParseMarker
-        lateinit var child4: ParseMarker
+        lateinit var child1: PtNode
+        lateinit var child2: PtNode
+        lateinit var child3: PtNode
+        lateinit var child4: PtNode
 
         val tree = buildTree {
             child1 = child {
@@ -52,12 +52,12 @@ class ParseMarkerOpsTest {
 
     @Test
     fun consistencyCheck() {
-        lateinit var child1: ParseMarker
-        lateinit var child2: ParseMarker
-        lateinit var child3: ParseMarker
-        lateinit var child4: ParseMarker
-        lateinit var child5: ParseMarker
-        lateinit var child6: ParseMarker
+        lateinit var child1: PtNode
+        lateinit var child2: PtNode
+        lateinit var child3: PtNode
+        lateinit var child4: PtNode
+        lateinit var child5: PtNode
+        lateinit var child6: PtNode
 
         val tree = buildTree {
             child1 = child {

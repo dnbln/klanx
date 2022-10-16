@@ -4,9 +4,6 @@ import org.bytedeco.javacpp.PointerPointer
 import org.bytedeco.llvm.LLVM.*
 import org.bytedeco.llvm.global.LLVM.*
 import java.lang.ref.Cleaner
-import kotlin.properties.PropertyDelegateProvider
-import kotlin.properties.ReadOnlyProperty
-import kotlin.reflect.KProperty
 
 internal class BuilderDisposer(private val ref: LLVMBuilderRef) : Runnable {
     override fun run() {
@@ -47,11 +44,11 @@ class KLLVMBuilder : AutoCloseable {
 fun KLLVMBuilder.buildCmp(
     name: String,
     f: KLLVMCmpBuilder.() -> KLLVMCmpEvaluation
-): KLLVMValueRef.KLLVMConditionValueRef {
+): KLLVMValueRef.KLLVMBooleanValueRef {
     val cmpEvaluation = f(KLLVMCmpBuilder())
     val ret = LLVMBuildICmp(ref, cmpEvaluation.predicate, cmpEvaluation.left.ref, cmpEvaluation.right.ref, name)
 
-    return KLLVMValueRef.KLLVMConditionValueRef(ret)
+    return KLLVMValueRef.KLLVMBooleanValueRef(ret)
 }
 
 class KLLVMCmpBuilder {
@@ -78,8 +75,8 @@ typealias LLVMIntPredicate = Int
 
 class KLLVMCmpEvaluation(val left: KLLVMValueRef, val predicate: LLVMIntPredicate, val right: KLLVMValueRef)
 
-fun KLLVMBuilder.conditionalBranch(
-    If: KLLVMValueRef.KLLVMConditionValueRef,
+fun KLLVMBuilder.buildCondBr(
+    If: KLLVMValueRef.KLLVMBooleanValueRef,
     Then: KLLVMBasicBlockRef,
     Else: KLLVMBasicBlockRef
 ) {
@@ -94,7 +91,7 @@ fun KLLVMBuilder.buildCall(
     args: List<KLLVMValueRef>,
     name: String
 ): KLLVMValueRef =
-    PointerPointer(*args.map(KLLVMValueRef::ref).toTypedArray()).use { argsPtr ->
+    PointerPointer(*args.toTypedArray()).use { argsPtr ->
         KLLVMValueRef(LLVMBuildCall2(ref, target.funTy.ref, target.ref, argsPtr, args.size, name))
     }
 
@@ -140,10 +137,21 @@ interface PhiBuilder {
     fun phi(f: Phi.() -> Unit)
 }
 
-internal class PhiTable(val size: Int, val values: List<KLLVMValueRef>, val blocks: List<KLLVMBasicBlockRef>) {
+fun PhiBuilder.phi(block: KLLVMBasicBlockRef): PhiBuilderTemp = PhiBuilderTemp(this, block)
+
+class PhiBuilderTemp(private val builder: PhiBuilder, private val block: KLLVMBasicBlockRef) {
+    infix fun then(value: KLLVMValueRef) {
+        builder.phi {
+            this.block = this@PhiBuilderTemp.block
+            this.value = value
+        }
+    }
+}
+
+internal class PhiTable(private val size: Int, private val values: List<KLLVMValueRef>, private val blocks: List<KLLVMBasicBlockRef>) {
     fun lower(): LoweredPhiTable {
-        val loweredValues = PointerPointer(*values.map(KLLVMValueRef::ref).toTypedArray())
-        val loweredBlocks = PointerPointer(*blocks.map(KLLVMBasicBlockRef::ref).toTypedArray())
+        val loweredValues = PointerPointer(*values.toTypedArray())
+        val loweredBlocks = PointerPointer(*blocks.toTypedArray())
 
         return LoweredPhiTable(size, loweredValues, loweredBlocks)
     }
@@ -151,8 +159,8 @@ internal class PhiTable(val size: Int, val values: List<KLLVMValueRef>, val bloc
 
 internal class LoweredPhiTable(
     val size: Int,
-    val values: PointerPointer<LLVMValueRef>,
-    val blocks: PointerPointer<LLVMBasicBlockRef>
+    val values: PointerPointer<KLLVMValueRef>,
+    val blocks: PointerPointer<KLLVMBasicBlockRef>
 ) : AutoCloseable {
     override fun close() {
         values.close()
@@ -166,7 +174,7 @@ private fun buildPhiTable(size: Int, iter: Iterator<Phi>): PhiTable {
     return PhiTable(size, values, blocks)
 }
 
-internal class PhiBuilderKnownSize(val size: Int) : PhiBuilder {
+internal class PhiBuilderKnownSize(private val size: Int) : PhiBuilder {
     private val phis = arrayOfNulls<Phi>(size)
     private var currentPtr = 0
 
@@ -205,4 +213,10 @@ fun KLLVMBuilder.buildRet(value: KLLVMValueRef) {
 
 fun KLLVMBuilder.buildRet() {
     LLVMBuildRetVoid(ref)
+}
+
+fun <T> KLLVMBuilder.buildBlock(block: KLLVMBasicBlockRef, f: KLLVMBuilder.() -> T): T {
+    positionAtEnd(block)
+
+    return f(this)
 }

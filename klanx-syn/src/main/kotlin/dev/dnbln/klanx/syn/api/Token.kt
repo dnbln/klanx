@@ -9,6 +9,10 @@ sealed class Token(val range: TextRange, val text: String? = null) {
         override val tokenKindName: String = "WHITESPACE"
     }
 
+    class Comment(range: TextRange) : Token(range) {
+        override val tokenKindName: String = "COMMENT"
+    }
+
     open class Id(range: TextRange, text: String) : Token(range, text) {
         override val tokenKindName: String = "ID"
     }
