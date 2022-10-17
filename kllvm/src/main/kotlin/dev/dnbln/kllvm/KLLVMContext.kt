@@ -4,7 +4,7 @@ import org.bytedeco.llvm.LLVM.LLVMContextRef
 import org.bytedeco.llvm.global.LLVM.*
 import java.lang.ref.Cleaner
 
-internal class ContextDisposer(val context: LLVMContextRef) : Runnable {
+internal class ContextDisposer(private val context: LLVMContextRef) : Runnable {
     override fun run() {
         println("Disposing context")
         LLVMContextDispose(context)

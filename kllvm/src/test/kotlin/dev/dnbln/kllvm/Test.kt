@@ -5,11 +5,14 @@ import org.bytedeco.llvm.global.LLVM.*
 
 fun main(args: Array<String>) {
     println("Initializing")
-    LLVMInitializeCore(LLVMGetGlobalPassRegistry())
-    LLVMLinkInMCJIT()
-    LLVMInitializeNativeAsmPrinter()
-    LLVMInitializeNativeAsmParser()
-    LLVMInitializeNativeTarget()
+    initKLLVM {
+        core(globalPassRegistry)
+        linkInMCJIT
+
+        nativeAsmPrinter
+        nativeAsmParser
+        nativeTarget
+    }
 
     val context = KLLVMContext()
     val builder = KLLVMBuilder(context)
@@ -60,10 +63,10 @@ fun main(args: Array<String>) {
 
     // Stage 4: Create a pass pipeline using the legacy pass manager
     KLLVMPassManager().use {
-        it.apply {
-            addAggressiveInstCombinerPass()
-            addNewGVNPass()
-            addCFGSimplificationPass()
+        it.configure {
+            aggressiveInstCombiner
+            gvnPass
+            cfgSimplificationPass
         }
 
         it.runPassManager(module)
