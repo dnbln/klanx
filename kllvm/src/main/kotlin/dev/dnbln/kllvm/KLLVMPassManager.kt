@@ -18,6 +18,12 @@ class KLLVMPassManager : AutoCloseable {
     override fun close() {
         cleanable.clean()
     }
+
+    companion object {
+        fun setupAndRun(f: KLLVMPassManager.() -> Unit) {
+            KLLVMPassManager().use(f)
+        }
+    }
 }
 
 fun KLLVMPassManager.addAggressiveInstCombinerPass() {

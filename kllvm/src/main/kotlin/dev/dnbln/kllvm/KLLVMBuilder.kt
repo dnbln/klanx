@@ -5,7 +5,7 @@ import org.bytedeco.llvm.LLVM.*
 import org.bytedeco.llvm.global.LLVM.*
 import java.lang.ref.Cleaner
 
-internal class BuilderDisposer(private val ref: LLVMBuilderRef) : Runnable {
+internal class BuilderDisposer(private val ref: LLVMBuilderRef, @HoldRef private val ctxRef: KLLVMContext? = null) : Runnable {
     override fun run() {
         println("Disposing builder")
         LLVMDisposeBuilder(ref)
@@ -28,7 +28,7 @@ class KLLVMBuilder : AutoCloseable {
     constructor(ctxRef: KLLVMContext) {
         this.ctxRef = ctxRef
         ref = LLVMCreateBuilderInContext(ctxRef.ref)
-        cleanable = cleaner.register(this, BuilderDisposer(ref))
+        cleanable = cleaner.register(this, BuilderDisposer(ref, ctxRef))
     }
 
     override fun close() {

@@ -5,7 +5,7 @@ import org.bytedeco.llvm.LLVM.LLVMValueRef
 import org.bytedeco.llvm.global.LLVM.*
 
 open class KLLVMValueRef internal constructor(internal val ref: LLVMValueRef): Pointer(ref) {
-    class KLLVMFnValueRef internal constructor(ref: LLVMValueRef, internal val funTy: KLLVMTypeRef.KLLVMFunTypeRef) : KLLVMValueRef(ref) {
+    class KLLVMFnValueRef internal constructor(ref: LLVMValueRef, internal val funTy: KLLVMTypeRef.KLLVMFnTypeRef) : KLLVMValueRef(ref) {
         fun setCallConv(conv: KLLVMCallConv) {
             LLVMSetFunctionCallConv(ref, conv)
         }

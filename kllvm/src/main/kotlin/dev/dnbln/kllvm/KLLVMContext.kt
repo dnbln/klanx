@@ -23,3 +23,8 @@ class KLLVMContext : AutoCloseable {
         cleanable.clean()
     }
 }
+
+val KLLVMContext.newBuilder: KLLVMBuilder
+    get() = KLLVMBuilder(this)
+
+fun KLLVMContext.newModule(name: String): KLLVMModule = KLLVMModule(name, this)

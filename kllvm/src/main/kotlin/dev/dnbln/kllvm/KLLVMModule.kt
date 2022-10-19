@@ -33,8 +33,25 @@ class KLLVMModule {
     }
 }
 
-fun KLLVMModule.addFunction(name: String, funTy: KLLVMTypeRef.KLLVMFunTypeRef): KLLVMValueRef.KLLVMFnValueRef {
-    return KLLVMValueRef.KLLVMFnValueRef(LLVMAddFunction(ref, name, funTy.ref), funTy)
+fun KLLVMModule.addFunction(
+    name: String,
+    funTy: KLLVMTypeRef.KLLVMFnTypeRef,
+    f: KLLVMFnConfigurator.() -> Unit = {}
+): KLLVMValueRef.KLLVMFnValueRef {
+    val value = KLLVMValueRef.KLLVMFnValueRef(LLVMAddFunction(ref, name, funTy.ref), funTy)
+
+    f(KLLVMFnConfigurator(value))
+
+    return value
+}
+
+class KLLVMFnConfigurator(private val fn: KLLVMValueRef.KLLVMFnValueRef) {
+    var callConv: KLLVMCallConv = 0
+        set(value) {
+            fn.setCallConv(value)
+
+            field = value
+        }
 }
 
 fun KLLVMModule.dump() {
@@ -44,9 +61,14 @@ fun KLLVMModule.dump() {
 fun KLLVMModule.verify(verifierFailureAction: Int, f: (Int, BytePointer) -> Unit) {
     val error = BytePointer()
 
-    val code = LLVMVerifyModule(ref, verifierFailureAction, error)
-
-    if (code != 0) {
-        f(code, error)
-    }
+    LLVMVerifyModule(ref, verifierFailureAction, error)
+        .takeUnless { it == 0 }
+        ?.let { f(it, error) }
 }
+
+fun KLLVMModule.writeBitcodeToFile(path: String) {
+    LLVMWriteBitcodeToFile(ref, path)
+        .takeUnless { it == 0 }
+        ?.let { throw KLLVMFail(it) }
+}
+

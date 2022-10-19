@@ -2,7 +2,7 @@ package dev.dnbln.kllvm.script
 
 import dev.dnbln.kllvm.KLLVMTypeRef
 
-fun buildFnTy(f: FunTyBuilder.() -> Unit): KLLVMTypeRef.KLLVMFunTypeRef {
+fun buildFnTy(f: FunTyBuilder.() -> Unit): KLLVMTypeRef.KLLVMFnTypeRef {
     val builder = FunTyBuilder()
 
     f(builder)

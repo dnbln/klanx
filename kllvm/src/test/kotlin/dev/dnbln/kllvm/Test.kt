@@ -1,6 +1,7 @@
 package dev.dnbln.kllvm
 
 import dev.dnbln.kllvm.script.*
+import org.bytedeco.llvm.global.LLVM
 import org.bytedeco.llvm.global.LLVM.*
 
 fun main(args: Array<String>) {
@@ -15,13 +16,14 @@ fun main(args: Array<String>) {
     }
 
     val context = KLLVMContext()
-    val builder = KLLVMBuilder(context)
-    val module = KLLVMModule("factorial", context)
+    val builder = context.newBuilder
+    val module = context.newModule("factorial")
 
     val i32 = context.i32
     val factorialFunTy = buildFnTy { fn(i32) returns i32 }
-    val factorial = module.addFunction("factorial", factorialFunTy)
-    factorial.setCallConv(LLVMCCallConv)
+    val factorial = module.addFunction("factorial", factorialFunTy) {
+        callConv = LLVMCCallConv
+    }
 
     val n = factorial.param(0)
     val zero = KLLVMValueRef.constInt(i32, 0)
@@ -55,24 +57,26 @@ fun main(args: Array<String>) {
         buildRet(result)
     }
 
-    module.verify(LLVMPrintMessageAction) { _, error ->
+    module.verify(LLVMPrintMessageAction) { _, _ ->
         error("verification failed")
     }
 
     module.dump()
 
     // Stage 4: Create a pass pipeline using the legacy pass manager
-    KLLVMPassManager().use {
-        it.configure {
+    KLLVMPassManager.setupAndRun {
+        configure {
             aggressiveInstCombiner
             gvnPass
             cfgSimplificationPass
         }
 
-        it.runPassManager(module)
+        runPassManager(module)
     }
 
     module.dump()
+
+    module.writeBitcodeToFile("x.bc")
 
     //// Stage 5: Execute the code using MCJIT
     //LLVMExecutionEngineRef engine = new LLVMExecutionEngineRef();
